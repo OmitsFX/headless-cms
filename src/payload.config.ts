@@ -7,12 +7,39 @@ import { fileURLToPath } from 'url'
 import { CloudflareContext, getCloudflareContext } from '@opennextjs/cloudflare'
 import { GetPlatformProxyOptions } from 'wrangler'
 import { r2Storage } from '@payloadcms/storage-r2'
+import { seoPlugin } from '@payloadcms/plugin-seo'
+import { GenerateTitle, GenerateURL, GenerateDescription, GenerateImage } from '@payloadcms/plugin-seo/types'
+import { Post } from './payload-types'
 
 import { Users } from './collections/Users'
 import { Media } from './collections/Media'
+import { Posts } from './collections/Posts'
+
+import localization from './i18n/localization'
 
 const filename = fileURLToPath(import.meta.url)
 const dirname = path.dirname(filename)
+
+const generateTitle: GenerateTitle<Post> = ({ doc }) => {
+  return doc?.title ? `${doc.title} | Omits Blog` : 'Omits Blog'
+}
+
+const generateURL: GenerateURL<Post> = ({ doc, locale }) => {
+  const slug = doc?.slug
+  const lang = locale || 'en'
+  return slug
+    ? `${process.env.NEXT_PUBLIC_SERVER_URL!}/${lang}/blog/${slug}`
+    : `${process.env.NEXT_PUBLIC_SERVER_URL!}/${lang}/blog`
+}
+
+const generateDescription: GenerateDescription<Post> = ({ doc }) => {
+  return doc?.description || ''
+}
+
+const generateImage: GenerateImage<Post> = ({ doc }) => {
+  return doc?.featuredImage || ''
+}
+
 const realpath = (value: string) => (fs.existsSync(value) ? fs.realpathSync(value) : undefined)
 
 const isCLI = process.argv.some((value) => realpath(value).endsWith(path.join('payload', 'bin.js')))
@@ -30,9 +57,10 @@ export default buildConfig({
       baseDir: path.resolve(dirname),
     },
   },
-  collections: [Users, Media],
+  collections: [Users, Media, Posts],
   editor: lexicalEditor(),
   secret: process.env.PAYLOAD_SECRET || '',
+  localization,
   typescript: {
     outputFile: path.resolve(dirname, 'payload-types.ts'),
   },
@@ -42,6 +70,14 @@ export default buildConfig({
       bucket: cloudflare.env.R2,
       collections: { media: true },
     }),
+    seoPlugin({
+      collections: ['posts'],
+      uploadsCollection: 'media',
+      generateTitle,
+      generateURL,
+      generateDescription,
+      generateImage,
+    })
   ],
 })
 

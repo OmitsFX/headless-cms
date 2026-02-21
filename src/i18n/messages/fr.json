@@ -1,0 +1,12 @@
+{
+	"blog": {
+    "title": "Blog",
+    "noPosts": "Aucun article de blog disponible pour le moment.",
+    "readMore": "Lire la suite",
+    "backToBlog": "Retour au blog",
+    "meta": {
+      "title": "Blog | Omits",
+      "description": "Découvrez nos derniers articles sur les paiements internationaux et la fintech."
+    }
+  }
+}

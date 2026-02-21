@@ -1,0 +1,12 @@
+{
+  "blog": {
+    "title": "Blog",
+    "noPosts": "No blog posts available yet.",
+    "readMore": "Read more",
+    "backToBlog": "Back to blog",
+    "meta": {
+      "title": "Blog | Omits",
+      "description": "Discover our latest articles on international payments and fintech."
+    }
+  }
+}
