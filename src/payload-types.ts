@@ -122,6 +122,11 @@ export interface UserAuthOperations {
  */
 export interface User {
   id: number;
+  name: string;
+  /**
+   * Admin: Full access | Editor: Posts & Media | Viewer: Read-only
+   */
+  roles: ('admin' | 'editor' | 'viewer')[];
   updatedAt: string;
   createdAt: string;
   email: string;
@@ -147,6 +152,9 @@ export interface User {
  */
 export interface Media {
   id: number;
+  /**
+   * Alt text for accessibility and SEO
+   */
   alt: string;
   updatedAt: string;
   createdAt: string;
@@ -290,6 +298,8 @@ export interface PayloadMigration {
  * via the `definition` "users_select".
  */
 export interface UsersSelect<T extends boolean = true> {
+  name?: T;
+  roles?: T;
   updatedAt?: T;
   createdAt?: T;
   email?: T;

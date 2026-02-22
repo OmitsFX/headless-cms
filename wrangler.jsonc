@@ -1,7 +1,7 @@
 {
   "$schema": "node_modules/wrangler/config-schema.json",
   "main": ".open-next/worker.js",
-  "name": "headless-cms",
+  "name": "cms",
   "compatibility_date": "2025-08-15",
   "compatibility_flags": [
     // Enable Node.js API
@@ -43,18 +43,12 @@
   ],
 
   "observability": {
-    "enabled": false,
-    "head_sampling_rate": 1,
     "logs": {
       "enabled": true,
-      "head_sampling_rate": 1,
-      "persist": true,
       "invocation_logs": true
     },
     "traces": {
-      "enabled": false,
-      "persist": true,
-      "head_sampling_rate": 1
+      "enabled": false
     }
   }
 

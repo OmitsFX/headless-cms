@@ -1,11 +1,13 @@
 import type { CollectionConfig } from 'payload'
 import { slugField } from '@/fields/slug'
+import { triggerRebuild, triggerRebuildOnDelete } from '@/hooks/triggerRebuild'
 
 export const Posts: CollectionConfig = {
   slug: 'posts',
   admin: {
     useAsTitle: 'title',
     defaultColumns: ['title', 'slug', 'publishedDate', 'status'],
+    group: 'Content',
   },
   access: {
     read: ({ req: { user } }) => {
@@ -18,6 +20,47 @@ export const Posts: CollectionConfig = {
       // Authenticated users (admins) can see all posts
       return true
     },
+    // Admins and Editors can create posts
+    create: ({ req: { user } }) => {
+      if (!user) return false
+      return (
+        user?.roles?.includes('admin') || 
+        user?.roles?.includes('editor')
+      )
+    },
+    
+    // Admins and Editors can update posts
+    update: ({ req: { user } }) => {
+      if (!user) return false
+      return (
+        user?.roles?.includes('admin') || 
+        user?.roles?.includes('editor')
+      )
+    },
+    
+    // Admins and Editors can delete posts
+    delete: ({ req: { user } }) => {
+      return user?.roles?.includes('admin') ||
+      user?.roles?.includes('editor')
+    },
+    
+    // Editors and Admins see posts in sidebar
+    admin: ({ req: { user } }) => {
+      if (!user) return false
+      return (
+        user?.roles?.includes('admin') || 
+        user?.roles?.includes('editor') || 
+        user?.roles?.includes('viewer')
+      )
+    },
+  },
+  hooks: {
+    // Trigger SSG rebuild after post is created/updated
+    afterChange: [triggerRebuild],
+    
+    // Trigger SSG rebuild after post is deleted
+    afterDelete: [triggerRebuildOnDelete],
+
   },
   fields: [
     {
