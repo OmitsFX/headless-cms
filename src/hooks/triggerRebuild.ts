@@ -64,10 +64,10 @@ export const triggerRebuild: CollectionAfterChangeHook = async ({
 
   if (!deployHook) {
     payload.logger.warn('CLOUDFLARE_DEPLOY_HOOK not set - skipping rebuild')
-    
+
     // Log the failed attempt
-    try {
-      await payload.create({
+    payload
+      .create({
         collection: 'deployment-logs',
         data: {
           status: 'failed' as DeploymentStatus,
@@ -78,18 +78,16 @@ export const triggerRebuild: CollectionAfterChangeHook = async ({
         },
         overrideAccess: true,
       })
-    } catch (err) {
-      const errorMsg = err instanceof Error ? err.message : String(err)
-      payload.logger.error(`Failed to log deployment error: ${errorMsg}`)
-    }
-    
+      .catch((err) => {
+        const errorMsg = err instanceof Error ? err.message : String(err)
+        payload.logger.error(`Failed to log deployment error: ${errorMsg}`)
+      })
+
     return doc
   }
 
   // Log rebuild trigger
-  const statusChange = previousDoc?.status
-    ? `${previousDoc.status} → ${doc.status}`
-    : doc.status
+  const statusChange = previousDoc?.status ? `${previousDoc.status} → ${doc.status}` : doc.status
 
   payload.logger.info(`Triggering rebuild for post: "${doc.slug}"`)
   payload.logger.info(`Operation: ${operation}, Status: ${statusChange}`)
@@ -126,26 +124,24 @@ export const triggerRebuild: CollectionAfterChangeHook = async ({
       payload.logger.info(`Your site will update in ~2-5 minutes`)
 
       // Log successful deployment - don't wait for this
-      setImmediate(async () => {
-        try {
-          await payload.create({
-            collection: 'deployment-logs',
-            data: {
-              status: 'success' as DeploymentStatus,
-              trigger,
-              post: doc.id,
-              postSlug: doc.slug as string,
-              buildId,
-              responseStatus,
-              cloudflareResponse: cloudflareData,
-            },
-            overrideAccess: true,
-          })
-        } catch (err) {
+      payload
+        .create({
+          collection: 'deployment-logs',
+          data: {
+            status: 'success' as DeploymentStatus,
+            trigger,
+            post: doc.id,
+            postSlug: doc.slug as string,
+            buildId,
+            responseStatus,
+            cloudflareResponse: cloudflareData,
+          },
+          overrideAccess: true,
+        })
+        .catch((err) => {
           const errorMsg = err instanceof Error ? err.message : String(err)
           payload.logger.error(`Failed to log deployment: ${errorMsg}`)
-        }
-      })
+        })
     } else {
       // Failed to trigger rebuild
       const errorText = await response.text()
@@ -154,25 +150,23 @@ export const triggerRebuild: CollectionAfterChangeHook = async ({
       payload.logger.error(`Status: ${responseStatus} ${response.statusText}`)
 
       // Log failed deployment
-      setImmediate(async () => {
-        try {
-          await payload.create({
-            collection: 'deployment-logs',
-            data: {
-              status: 'failed' as DeploymentStatus,
-              trigger,
-              post: doc.id,
-              postSlug: doc.slug as string,
-              responseStatus,
-              errorMessage: `HTTP ${responseStatus}: ${response.statusText}\n${errorText}`,
-            },
-            overrideAccess: true,
-          })
-        } catch (err) {
+      payload
+        .create({
+          collection: 'deployment-logs',
+          data: {
+            status: 'failed' as DeploymentStatus,
+            trigger,
+            post: doc.id,
+            postSlug: doc.slug as string,
+            responseStatus,
+            errorMessage: `HTTP ${responseStatus}: ${response.statusText}\n${errorText}`,
+          },
+          overrideAccess: true,
+        })
+        .catch((err) => {
           const errorMsg = err instanceof Error ? err.message : String(err)
           payload.logger.error(`Failed to log deployment error: ${errorMsg}`)
-        }
-      })
+        })
     }
   } catch (error) {
     // Network error or other exception
@@ -182,24 +176,22 @@ export const triggerRebuild: CollectionAfterChangeHook = async ({
     payload.logger.error('Post was saved, but rebuild did not trigger')
 
     // Log the error
-    setImmediate(async () => {
-      try {
-        await payload.create({
-          collection: 'deployment-logs',
-          data: {
-            status: 'failed' as DeploymentStatus,
-            trigger,
-            post: doc.id,
-            postSlug: doc.slug as string,
-            errorMessage: `Exception: ${errorMessage}`,
-          },
-          overrideAccess: true,
-        })
-      } catch (err) {
+    payload
+      .create({
+        collection: 'deployment-logs',
+        data: {
+          status: 'failed' as DeploymentStatus,
+          trigger,
+          post: doc.id,
+          postSlug: doc.slug as string,
+          errorMessage: `Exception: ${errorMessage}`,
+        },
+        overrideAccess: true,
+      })
+      .catch((err) => {
         const errorMsg = err instanceof Error ? err.message : String(err)
         payload.logger.error(`Failed to log deployment error: ${errorMsg}`)
-      }
-    })
+      })
   }
 
   return doc
@@ -208,10 +200,7 @@ export const triggerRebuild: CollectionAfterChangeHook = async ({
 /**
  * Trigger rebuild when a published post is deleted
  */
-export const triggerRebuildOnDelete: CollectionAfterDeleteHook = async ({
-  req,
-  doc,
-}) => {
+export const triggerRebuildOnDelete: CollectionAfterDeleteHook = async ({ req, doc }) => {
   const { payload } = req
 
   // Only rebuild if the deleted post was published
@@ -224,26 +213,24 @@ export const triggerRebuildOnDelete: CollectionAfterDeleteHook = async ({
 
   if (!deployHook) {
     payload.logger.warn('CLOUDFLARE_DEPLOY_HOOK not set')
-    
+
     // Log the failed attempt
-    setImmediate(async () => {
-      try {
-        await payload.create({
-          collection: 'deployment-logs',
-          data: {
-            status: 'failed' as DeploymentStatus,
-            trigger: 'post-deleted' as DeploymentTrigger,
-            postSlug: doc.slug as string,
-            errorMessage: 'CLOUDFLARE_DEPLOY_HOOK environment variable not set',
-          },
-          overrideAccess: true,
-        })
-      } catch (err) {
+    payload
+      .create({
+        collection: 'deployment-logs',
+        data: {
+          status: 'failed' as DeploymentStatus,
+          trigger: 'post-deleted' as DeploymentTrigger,
+          postSlug: doc.slug as string,
+          errorMessage: 'CLOUDFLARE_DEPLOY_HOOK environment variable not set',
+        },
+        overrideAccess: true,
+      })
+      .catch((err) => {
         const errorMsg = err instanceof Error ? err.message : String(err)
         payload.logger.error(`Failed to log deployment error: ${errorMsg}`)
-      }
-    })
-    
+      })
+
     return doc
   }
 
@@ -275,25 +262,23 @@ export const triggerRebuildOnDelete: CollectionAfterDeleteHook = async ({
       }
 
       // Log successful deployment
-      setImmediate(async () => {
-        try {
-          await payload.create({
-            collection: 'deployment-logs',
-            data: {
-              status: 'success' as DeploymentStatus,
-              trigger: 'post-deleted' as DeploymentTrigger,
-              postSlug: doc.slug as string,
-              buildId,
-              responseStatus,
-              cloudflareResponse: cloudflareData,
-            },
-            overrideAccess: true,
-          })
-        } catch (err) {
+      payload
+        .create({
+          collection: 'deployment-logs',
+          data: {
+            status: 'success' as DeploymentStatus,
+            trigger: 'post-deleted' as DeploymentTrigger,
+            postSlug: doc.slug as string,
+            buildId,
+            responseStatus,
+            cloudflareResponse: cloudflareData,
+          },
+          overrideAccess: true,
+        })
+        .catch((err) => {
           const errorMsg = err instanceof Error ? err.message : String(err)
           payload.logger.error(`Failed to log deployment: ${errorMsg}`)
-        }
-      })
+        })
     } else {
       const errorText = await response.text()
 
@@ -301,24 +286,22 @@ export const triggerRebuildOnDelete: CollectionAfterDeleteHook = async ({
       payload.logger.error(`Status: ${responseStatus} ${response.statusText}`)
 
       // Log failed deployment
-      setImmediate(async () => {
-        try {
-          await payload.create({
-            collection: 'deployment-logs',
-            data: {
-              status: 'failed' as DeploymentStatus,
-              trigger: 'post-deleted' as DeploymentTrigger,
-              postSlug: doc.slug as string,
-              responseStatus,
-              errorMessage: `HTTP ${responseStatus}: ${response.statusText}\n${errorText}`,
-            },
-            overrideAccess: true,
-          })
-        } catch (err) {
+      payload
+        .create({
+          collection: 'deployment-logs',
+          data: {
+            status: 'failed' as DeploymentStatus,
+            trigger: 'post-deleted' as DeploymentTrigger,
+            postSlug: doc.slug as string,
+            responseStatus,
+            errorMessage: `HTTP ${responseStatus}: ${response.statusText}\n${errorText}`,
+          },
+          overrideAccess: true,
+        })
+        .catch((err) => {
           const errorMsg = err instanceof Error ? err.message : String(err)
           payload.logger.error(`Failed to log deployment error: ${errorMsg}`)
-        }
-      })
+        })
     }
   } catch (error) {
     const errorMessage = error instanceof Error ? error.message : 'Unknown error'
@@ -326,23 +309,21 @@ export const triggerRebuildOnDelete: CollectionAfterDeleteHook = async ({
     payload.logger.error(`Rebuild trigger error on delete: ${errorMessage}`)
 
     // Log the error
-    setImmediate(async () => {
-      try {
-        await payload.create({
-          collection: 'deployment-logs',
-          data: {
-            status: 'failed' as DeploymentStatus,
-            trigger: 'post-deleted' as DeploymentTrigger,
-            postSlug: doc.slug as string,
-            errorMessage: `Exception: ${errorMessage}`,
-          },
-          overrideAccess: true,
-        })
-      } catch (err) {
+    payload
+      .create({
+        collection: 'deployment-logs',
+        data: {
+          status: 'failed' as DeploymentStatus,
+          trigger: 'post-deleted' as DeploymentTrigger,
+          postSlug: doc.slug as string,
+          errorMessage: `Exception: ${errorMessage}`,
+        },
+        overrideAccess: true,
+      })
+      .catch((err) => {
         const errorMsg = err instanceof Error ? err.message : String(err)
         payload.logger.error(`Failed to log deployment error: ${errorMsg}`)
-      }
-    })
+      })
   }
 
   return doc
