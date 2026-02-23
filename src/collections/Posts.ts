@@ -1,5 +1,6 @@
 import type { CollectionConfig } from 'payload'
 import { slugField } from '@/fields/slug'
+import { triggerRebuild, triggerRebuildOnDelete } from '@/hooks/triggerRebuild'
 
 export const Posts: CollectionConfig = {
   slug: 'posts',
@@ -18,6 +19,13 @@ export const Posts: CollectionConfig = {
       // Authenticated users (admins) can see all posts
       return true
     },
+  },
+  hooks: {
+    // Trigger SSG rebuild after post is created/updated
+    afterChange: [triggerRebuild],
+    
+    // Trigger SSG rebuild after post is deleted
+    afterDelete: [triggerRebuildOnDelete],
   },
   fields: [
     {
