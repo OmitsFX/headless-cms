@@ -9,12 +9,12 @@ export const Users: CollectionConfig = {
   },
   access: {
     // Only admins can create users
-    create: ({ req: { user } }) => user?.roles?.includes('admin') || false,
+    create: ({ req: { user } }) => user?.roles === 'admin' || false,
     
     // Everyone can read their own profile, admins can read all
     read: ({ req: { user } }) => {
       if (!user) return false
-      if (user.roles?.includes('admin')) return true
+      if (user?.roles === 'admin') return true
       // Users can only see themselves
       return {
         id: { equals: user.id },
@@ -24,15 +24,15 @@ export const Users: CollectionConfig = {
     // Users can update themselves, admins can update anyone
     update: ({ req: { user }, id }) => {
       if (!user) return false
-      if (user.roles?.includes('admin')) return true
+      if (user?.roles === 'admin') return true
       return user.id === id
     },
     
     // Only admins can delete users
-    delete: ({ req: { user } }) => user?.roles?.includes('admin') || false,
+    delete: ({ req: { user } }) => user?.roles === 'admin' || false,
     
     // Admins see the collection in sidebar
-    admin: ({ req: { user } }) => user?.roles?.includes('admin') || false,
+    admin: ({ req: { user } }) => user?.roles === 'admin' || false,
   },
   auth: true,
   fields: [
@@ -53,14 +53,14 @@ export const Users: CollectionConfig = {
         { label: 'Editor', value: 'editor' },
         { label: 'Viewer', value: 'viewer' },
       ],
-      defaultValue: 'admin',
+      defaultValue: 'editor',
       required: true,
       saveToJWT: true, // Include in JWT for fast access checks
       access: {
         // Only admins can see roles
-        read: ({ req: { user } }) => user?.roles?.includes('admin') || false,
+        read: ({ req: { user } }) => user?.roles === 'admin' || false,
         // Only admins can update roles
-        update: ({ req: { user } }) => user?.roles?.includes('admin') || false,
+        update: ({ req: { user } }) => user?.roles === 'admin' || false,
       },
       admin: {
         description: 'Admin: Full access | Editor: Posts & Media | Viewer: Read-only',

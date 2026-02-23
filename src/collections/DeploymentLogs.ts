@@ -12,17 +12,17 @@ export const DeploymentLogs: CollectionConfig = {
   },
   access: {
     // Only admins can read deployment logs
-    read: ({ req: { user } }) => user?.roles?.includes('admin') || false,
+    read: ({ req: { user } }) => user?.roles === 'admin' || false,
     
     // Prevent manual creation/editing (only created by hooks)
     create: () => false,
     update: () => false,
     
     // Only admins can delete
-    delete: ({ req: { user } }) => user?.roles?.includes('admin') || false,
+    delete: ({ req: { user } }) => user?.roles === 'admin' || false,
     
     // Only admins see this collection in sidebar
-    admin: ({ req: { user } }) => user?.roles?.includes('admin') || false,
+    admin: ({ req: { user } }) => user?.roles === 'admin' || false,
   },
   fields: [
     {

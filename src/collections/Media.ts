@@ -12,8 +12,8 @@ export const Media: CollectionConfig = {
     create: ({ req: { user } }) => {
       if (!user) return false
       return (
-        user.roles?.includes('admin') || 
-        user.roles?.includes('editor')
+        user?.roles === 'admin' || 
+        user?.roles === 'editor'
       )
     },
     
@@ -21,16 +21,16 @@ export const Media: CollectionConfig = {
     update: ({ req: { user } }) => {
       if (!user) return false
       return (
-        user.roles?.includes('admin') || 
-        user.roles?.includes('editor')
+        user?.roles === 'admin' || 
+        user?.roles === 'editor'
       )
     },
     
     // Admins and Editors can delete media
     delete: ({ req: { user } }) => {
       return (
-        user?.roles?.includes('admin') ||
-        user?.roles?.includes('editor')
+        user?.roles === 'admin' ||
+        user?.roles === 'editor'
       )
     },
     
@@ -38,9 +38,9 @@ export const Media: CollectionConfig = {
     admin: ({ req: { user } }) => {
       if (!user) return false
       return (
-        user.roles?.includes('admin') || 
-        user.roles?.includes('editor') || 
-        user.roles?.includes('viewer')
+        user?.roles === 'admin' || 
+        user?.roles === 'editor' || 
+        user?.roles === 'viewer'
       )
     },
   },

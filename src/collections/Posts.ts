@@ -24,8 +24,8 @@ export const Posts: CollectionConfig = {
     create: ({ req: { user } }) => {
       if (!user) return false
       return (
-        user?.roles?.includes('admin') || 
-        user?.roles?.includes('editor')
+        user?.roles === 'admin' || 
+        user?.roles === 'editor'
       )
     },
     
@@ -33,24 +33,26 @@ export const Posts: CollectionConfig = {
     update: ({ req: { user } }) => {
       if (!user) return false
       return (
-        user?.roles?.includes('admin') || 
-        user?.roles?.includes('editor')
+        user?.roles === 'admin' || 
+        user?.roles === 'editor'
       )
     },
     
     // Admins and Editors can delete posts
     delete: ({ req: { user } }) => {
-      return user?.roles?.includes('admin') ||
-      user?.roles?.includes('editor')
+      return( 
+        user?.roles === 'admin' ||
+        user?.roles === 'editor'
+      )
     },
     
     // Editors and Admins see posts in sidebar
     admin: ({ req: { user } }) => {
       if (!user) return false
       return (
-        user?.roles?.includes('admin') || 
-        user?.roles?.includes('editor') || 
-        user?.roles?.includes('viewer')
+        user?.roles === 'admin' || 
+        user?.roles === 'editor' || 
+        user?.roles === 'viewer'
       )
     },
   },
