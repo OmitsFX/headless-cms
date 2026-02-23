@@ -66,8 +66,11 @@ export const triggerRebuild: CollectionAfterChangeHook = async ({
     payload.logger.warn('CLOUDFLARE_DEPLOY_HOOK not set - skipping rebuild')
 
     // Log the failed attempt
-    payload
-      .create({
+    // NOTE: We intentionally omit `req` here so Payload uses a fresh D1 connection.
+    // Passing `req` on Cloudflare Workers can cause silent write failures because
+    // the request-scoped D1 connection may no longer be writable at this point.
+    try {
+      await payload.create({
         collection: 'deployment-logs',
         data: {
           status: 'failed' as DeploymentStatus,
@@ -78,10 +81,10 @@ export const triggerRebuild: CollectionAfterChangeHook = async ({
         },
         overrideAccess: true,
       })
-      .catch((err) => {
-        const errorMsg = err instanceof Error ? err.message : String(err)
-        payload.logger.error(`Failed to log deployment error: ${errorMsg}`)
-      })
+    } catch (err) {
+      const errorMsg = err instanceof Error ? err.message : String(err)
+      payload.logger.error(`Failed to log deployment error: ${errorMsg}`)
+    }
 
     return doc
   }
@@ -123,9 +126,12 @@ export const triggerRebuild: CollectionAfterChangeHook = async ({
 
       payload.logger.info(`Your site will update in ~2-5 minutes`)
 
-      // Log successful deployment - don't wait for this
-      payload
-        .create({
+      // Log successful deployment
+      // NOTE: Omitting `req` intentionally — avoids request-scoped D1 write failures
+      // on Cloudflare Workers where the connection lifetime is tied to the request context.
+      try {
+        payload.logger.info('🔍 About to create deployment log...')
+        await payload.create({
           collection: 'deployment-logs',
           data: {
             status: 'success' as DeploymentStatus,
@@ -138,10 +144,12 @@ export const triggerRebuild: CollectionAfterChangeHook = async ({
           },
           overrideAccess: true,
         })
-        .catch((err) => {
-          const errorMsg = err instanceof Error ? err.message : String(err)
-          payload.logger.error(`Failed to log deployment: ${errorMsg}`)
-        })
+
+        payload.logger.info('✅ Deployment log created successfully')
+      } catch (err) {
+        const errorMsg = err instanceof Error ? err.message : String(err)
+        payload.logger.error(`Failed to log deployment: ${errorMsg}`)
+      }
     } else {
       // Failed to trigger rebuild
       const errorText = await response.text()
@@ -149,7 +157,7 @@ export const triggerRebuild: CollectionAfterChangeHook = async ({
       payload.logger.error(`Failed to trigger rebuild`)
       payload.logger.error(`Status: ${responseStatus} ${response.statusText}`)
 
-      // Log failed deployment
+      // Log failed deployment — omit `req` for the same D1 write-safety reason
       payload
         .create({
           collection: 'deployment-logs',
@@ -175,7 +183,7 @@ export const triggerRebuild: CollectionAfterChangeHook = async ({
     payload.logger.error(`Rebuild trigger error: ${errorMessage}`)
     payload.logger.error('Post was saved, but rebuild did not trigger')
 
-    // Log the error
+    // Log the error — omit `req` for D1 write-safety
     payload
       .create({
         collection: 'deployment-logs',
@@ -214,7 +222,7 @@ export const triggerRebuildOnDelete: CollectionAfterDeleteHook = async ({ req, d
   if (!deployHook) {
     payload.logger.warn('CLOUDFLARE_DEPLOY_HOOK not set')
 
-    // Log the failed attempt
+    // Log the failed attempt — omit `req` for D1 write-safety
     payload
       .create({
         collection: 'deployment-logs',
@@ -261,7 +269,7 @@ export const triggerRebuildOnDelete: CollectionAfterDeleteHook = async ({ req, d
         // Response might not be JSON
       }
 
-      // Log successful deployment
+      // Log successful deployment — omit `req` for D1 write-safety
       payload
         .create({
           collection: 'deployment-logs',
@@ -285,7 +293,7 @@ export const triggerRebuildOnDelete: CollectionAfterDeleteHook = async ({ req, d
       payload.logger.error(`Failed to trigger rebuild after delete`)
       payload.logger.error(`Status: ${responseStatus} ${response.statusText}`)
 
-      // Log failed deployment
+      // Log failed deployment — omit `req` for D1 write-safety
       payload
         .create({
           collection: 'deployment-logs',
@@ -308,7 +316,7 @@ export const triggerRebuildOnDelete: CollectionAfterDeleteHook = async ({ req, d
 
     payload.logger.error(`Rebuild trigger error on delete: ${errorMessage}`)
 
-    // Log the error
+    // Log the error — omit `req` for D1 write-safety
     payload
       .create({
         collection: 'deployment-logs',
