@@ -8,7 +8,7 @@ export const DeploymentLogs: CollectionConfig = {
     useAsTitle: 'id',
     defaultColumns: ['createdAt', 'status', 'trigger', 'post'],
     description: 'Track all website rebuild deployments',
-    group: 'System',
+    group: 'Admin',
   },
   access: {
     // Only admins can read deployment logs
@@ -30,9 +30,9 @@ export const DeploymentLogs: CollectionConfig = {
       type: 'select',
       required: true,
       options: [
-        { label: '✅ Success', value: 'success' },
-        { label: '❌ Failed', value: 'failed' },
-        { label: '⏳ Pending', value: 'pending' },
+        { label: 'Success', value: 'success' },
+        { label: 'Failed', value: 'failed' },
+        { label: 'Pending', value: 'pending' },
       ],
       admin: {
         description: 'Deployment status',
@@ -87,14 +87,6 @@ export const DeploymentLogs: CollectionConfig = {
       admin: {
         description: 'Error message if deployment failed',
         condition: (data) => data.status === 'failed',
-      },
-    },
-    {
-      name: 'deployHookUrl',
-      type: 'text',
-      admin: {
-        description: 'Deploy hook URL (for debugging)',
-        readOnly: true,
       },
     },
     {

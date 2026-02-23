@@ -47,13 +47,13 @@ export const Users: CollectionConfig = {
     {
       name: 'roles',
       type: 'select',
-      hasMany: true,
+      hasMany: false,
       options: [
         { label: 'Admin', value: 'admin' },
         { label: 'Editor', value: 'editor' },
         { label: 'Viewer', value: 'viewer' },
       ],
-      defaultValue: ['admin'],
+      defaultValue: 'admin',
       required: true,
       saveToJWT: true, // Include in JWT for fast access checks
       access: {

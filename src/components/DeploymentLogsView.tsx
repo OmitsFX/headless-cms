@@ -2,7 +2,6 @@
 'use client'
 
 import React, { useEffect, useState } from 'react'
-import { usePayloadAPI } from '@payloadcms/ui'
 
 interface DeploymentLog {
   id: string
@@ -20,8 +19,18 @@ interface DeploymentLog {
   createdAt: string
 }
 
+// Type for Payload API response
+interface PayloadResponse {
+  docs: DeploymentLog[]
+  totalDocs: number
+  limit: number
+  page: number
+  totalPages: number
+  hasNextPage: boolean
+  hasPrevPage: boolean
+}
+
 export default function DeploymentLogsView() {
-  const { getLocal } = usePayloadAPI()
   const [logs, setLogs] = useState<DeploymentLog[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
@@ -33,13 +42,18 @@ export default function DeploymentLogsView() {
   const fetchLogs = async () => {
     try {
       setLoading(true)
-      const result = await getLocal({
-        collection: 'deployment-logs',
-        limit: 50,
-        sort: '-createdAt',
+      
+      // Use REST API to fetch deployment logs
+      const response = await fetch('/api/deployment-logs?limit=50&sort=-createdAt', {
+        credentials: 'include', // Include auth cookies
       })
 
-      setLogs(result.docs as DeploymentLog[])
+      if (!response.ok) {
+        throw new Error('Failed to fetch logs')
+      }
+
+      const data = (await response.json()) as PayloadResponse
+      setLogs(data.docs || [])
       setError(null)
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to load logs')
@@ -238,7 +252,7 @@ export default function DeploymentLogsView() {
           border: '1px solid #bfdbfe',
         }}
       >
-        <h3 style={{ margin: '0 0 0.5rem 0', fontSize: '1.1rem' }}>ℹ️ About Deployments</h3>
+        <h3 style={{ margin: '0 0 0.5rem 0', fontSize: '1.1rem' }}>About Deployments</h3>
         <ul style={{ margin: 0, paddingLeft: '1.5rem', color: '#333' }}>
           <li>Deployments are triggered automatically when you publish, update, or delete posts</li>
           <li>Each deployment rebuilds your entire website (true SSG)</li>

@@ -70,6 +70,7 @@ export interface Config {
     users: User;
     media: Media;
     posts: Post;
+    'deployment-logs': DeploymentLog;
     'payload-kv': PayloadKv;
     'payload-locked-documents': PayloadLockedDocument;
     'payload-preferences': PayloadPreference;
@@ -80,6 +81,7 @@ export interface Config {
     users: UsersSelect<false> | UsersSelect<true>;
     media: MediaSelect<false> | MediaSelect<true>;
     posts: PostsSelect<false> | PostsSelect<true>;
+    'deployment-logs': DeploymentLogsSelect<false> | DeploymentLogsSelect<true>;
     'payload-kv': PayloadKvSelect<false> | PayloadKvSelect<true>;
     'payload-locked-documents': PayloadLockedDocumentsSelect<false> | PayloadLockedDocumentsSelect<true>;
     'payload-preferences': PayloadPreferencesSelect<false> | PayloadPreferencesSelect<true>;
@@ -126,7 +128,7 @@ export interface User {
   /**
    * Admin: Full access | Editor: Posts & Media | Viewer: Read-only
    */
-  roles: ('admin' | 'editor' | 'viewer')[];
+  roles: 'admin' | 'editor' | 'viewer';
   updatedAt: string;
   createdAt: string;
   email: string;
@@ -216,6 +218,57 @@ export interface Post {
   createdAt: string;
 }
 /**
+ * Track all website rebuild deployments
+ *
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "deployment-logs".
+ */
+export interface DeploymentLog {
+  id: number;
+  /**
+   * Deployment status
+   */
+  status: 'success' | 'failed' | 'pending';
+  /**
+   * What triggered the deployment
+   */
+  trigger: 'post-published' | 'post-updated' | 'post-deleted' | 'manual';
+  /**
+   * Post that triggered the deployment
+   */
+  post?: (number | null) | Post;
+  /**
+   * Post slug (for deleted posts)
+   */
+  postSlug?: string | null;
+  /**
+   * Cloudflare build ID
+   */
+  buildId?: string | null;
+  /**
+   * HTTP response status code
+   */
+  responseStatus?: number | null;
+  /**
+   * Error message if deployment failed
+   */
+  errorMessage?: string | null;
+  /**
+   * Full response from Cloudflare
+   */
+  cloudflareResponse?:
+    | {
+        [k: string]: unknown;
+      }
+    | unknown[]
+    | string
+    | number
+    | boolean
+    | null;
+  updatedAt: string;
+  createdAt: string;
+}
+/**
  * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "payload-kv".
  */
@@ -250,6 +303,10 @@ export interface PayloadLockedDocument {
     | ({
         relationTo: 'posts';
         value: number | Post;
+      } | null)
+    | ({
+        relationTo: 'deployment-logs';
+        value: number | DeploymentLog;
       } | null);
   globalSlug?: string | null;
   user: {
@@ -354,6 +411,22 @@ export interface PostsSelect<T extends boolean = true> {
         description?: T;
         image?: T;
       };
+  updatedAt?: T;
+  createdAt?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "deployment-logs_select".
+ */
+export interface DeploymentLogsSelect<T extends boolean = true> {
+  status?: T;
+  trigger?: T;
+  post?: T;
+  postSlug?: T;
+  buildId?: T;
+  responseStatus?: T;
+  errorMessage?: T;
+  cloudflareResponse?: T;
   updatedAt?: T;
   createdAt?: T;
 }

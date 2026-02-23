@@ -14,8 +14,11 @@ import { Post } from './payload-types'
 import { Users } from './collections/Users'
 import { Media } from './collections/Media'
 import { Posts } from './collections/Posts'
+import { DeploymentLogs } from './collections/DeploymentLogs'
 
 import localization from './i18n/localization'
+
+import { resendAdapter } from '@payloadcms/email-resend'
 
 const filename = fileURLToPath(import.meta.url)
 const dirname = path.dirname(filename)
@@ -56,8 +59,16 @@ export default buildConfig({
     importMap: {
       baseDir: path.resolve(dirname),
     },
+    components: {
+      views: {
+        deploymentLogs: {
+          Component: '/components/DeploymentLogsView',
+          path: '/deployment-logs',
+        },
+      },
+    },
   },
-  collections: [Users, Media, Posts],
+  collections: [Users, Media, Posts, DeploymentLogs],
   editor: lexicalEditor(),
   secret: process.env.PAYLOAD_SECRET || '',
   localization,
@@ -82,6 +93,11 @@ export default buildConfig({
       generateImage,
     })
   ],
+  email: resendAdapter({
+    defaultFromAddress: 'noreply@m.myomits.com',
+    defaultFromName: 'Omits CMS',
+    apiKey: process.env.RESEND_API_KEY || ''
+  }),
 })
 
 // Adapted from https://github.com/opennextjs/opennextjs-cloudflare/blob/d00b3a13e42e65aad76fba41774815726422cc39/packages/cloudflare/src/api/cloudflare-context.ts#L328C36-L328C46
