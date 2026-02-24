@@ -15,6 +15,8 @@ import { Users } from './collections/Users'
 import { Media } from './collections/Media'
 import { Posts } from './collections/Posts'
 import { DeploymentLogs } from './collections/DeploymentLogs'
+import { Legal } from './collections/Legal'
+import { DeploymentSettings } from './globals/DeploymentSettings'
 
 import { resendAdapter } from '@payloadcms/email-resend'
 
@@ -68,7 +70,8 @@ export default buildConfig({
       },
     },
   },
-  collections: [Users, Media, Posts, DeploymentLogs],
+  collections: [Users, Media, Posts, DeploymentLogs, Legal],
+  globals: [DeploymentSettings],
   editor: lexicalEditor(),
   secret: process.env.PAYLOAD_SECRET || '',
   localization,

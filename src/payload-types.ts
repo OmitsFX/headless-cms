@@ -71,6 +71,7 @@ export interface Config {
     media: Media;
     posts: Post;
     'deployment-logs': DeploymentLog;
+    legal: Legal;
     'payload-kv': PayloadKv;
     'payload-locked-documents': PayloadLockedDocument;
     'payload-preferences': PayloadPreference;
@@ -82,6 +83,7 @@ export interface Config {
     media: MediaSelect<false> | MediaSelect<true>;
     posts: PostsSelect<false> | PostsSelect<true>;
     'deployment-logs': DeploymentLogsSelect<false> | DeploymentLogsSelect<true>;
+    legal: LegalSelect<false> | LegalSelect<true>;
     'payload-kv': PayloadKvSelect<false> | PayloadKvSelect<true>;
     'payload-locked-documents': PayloadLockedDocumentsSelect<false> | PayloadLockedDocumentsSelect<true>;
     'payload-preferences': PayloadPreferencesSelect<false> | PayloadPreferencesSelect<true>;
@@ -91,8 +93,12 @@ export interface Config {
     defaultIDType: number;
   };
   fallbackLocale: ('false' | 'none' | 'null') | false | null | ('en' | 'fr') | ('en' | 'fr')[];
-  globals: {};
-  globalsSelect: {};
+  globals: {
+    'deployment-settings': DeploymentSetting;
+  };
+  globalsSelect: {
+    'deployment-settings': DeploymentSettingsSelect<false> | DeploymentSettingsSelect<true>;
+  };
   locale: 'en' | 'fr';
   user: User;
   jobs: {
@@ -266,6 +272,54 @@ export interface DeploymentLog {
   createdAt: string;
 }
 /**
+ * Legal pages like Privacy Policy, Terms of Service, etc.
+ *
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "legal".
+ */
+export interface Legal {
+  id: number;
+  /**
+   * Page title (e.g., "Privacy Policy")
+   */
+  title: string;
+  /**
+   * Short description for SEO and preview cards
+   */
+  description: string;
+  slug?: string | null;
+  slugLock?: boolean | null;
+  /**
+   * Legal page content
+   */
+  body: {
+    root: {
+      type: string;
+      children: {
+        type: any;
+        version: number;
+        [k: string]: unknown;
+      }[];
+      direction: ('ltr' | 'rtl') | null;
+      format: 'left' | 'start' | 'center' | 'right' | 'end' | 'justify' | '';
+      indent: number;
+      version: number;
+    };
+    [k: string]: unknown;
+  };
+  /**
+   * Date this policy was last updated (auto-set on save)
+   */
+  lastUpdated: string;
+  /**
+   * Previous publication date (auto-tracked)
+   */
+  previousPublicationDate?: string | null;
+  updatedAt: string;
+  createdAt: string;
+  _status?: ('draft' | 'published') | null;
+}
+/**
  * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "payload-kv".
  */
@@ -304,6 +358,10 @@ export interface PayloadLockedDocument {
     | ({
         relationTo: 'deployment-logs';
         value: number | DeploymentLog;
+      } | null)
+    | ({
+        relationTo: 'legal';
+        value: number | Legal;
       } | null);
   globalSlug?: string | null;
   user: {
@@ -429,6 +487,22 @@ export interface DeploymentLogsSelect<T extends boolean = true> {
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "legal_select".
+ */
+export interface LegalSelect<T extends boolean = true> {
+  title?: T;
+  description?: T;
+  slug?: T;
+  slugLock?: T;
+  body?: T;
+  lastUpdated?: T;
+  previousPublicationDate?: T;
+  updatedAt?: T;
+  createdAt?: T;
+  _status?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "payload-kv_select".
  */
 export interface PayloadKvSelect<T extends boolean = true> {
@@ -466,6 +540,56 @@ export interface PayloadMigrationsSelect<T extends boolean = true> {
   batch?: T;
   updatedAt?: T;
   createdAt?: T;
+}
+/**
+ * Configure which content changes trigger website deployments
+ *
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "deployment-settings".
+ */
+export interface DeploymentSetting {
+  id: number;
+  /**
+   * Select which collections should trigger a website rebuild when published/updated/deleted
+   */
+  enabledCollections?: ('posts' | 'legal')[] | null;
+  /**
+   * Trigger deployment when content status changes to "published"
+   */
+  deployOnPublish?: boolean | null;
+  /**
+   * Trigger deployment when already-published content is modified
+   */
+  deployOnUpdate?: boolean | null;
+  /**
+   * Trigger deployment when published content is removed
+   */
+  deployOnDelete?: boolean | null;
+  /**
+   * Your Cloudflare Pages deploy hook URL. Leave empty to use environment variable.
+   */
+  deployHookUrl?: string | null;
+  /**
+   * Log all deployment triggers to the deployment-logs collection
+   */
+  enableLogging?: boolean | null;
+  updatedAt?: string | null;
+  createdAt?: string | null;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "deployment-settings_select".
+ */
+export interface DeploymentSettingsSelect<T extends boolean = true> {
+  enabledCollections?: T;
+  deployOnPublish?: T;
+  deployOnUpdate?: T;
+  deployOnDelete?: T;
+  deployHookUrl?: T;
+  enableLogging?: T;
+  updatedAt?: T;
+  createdAt?: T;
+  globalType?: T;
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
