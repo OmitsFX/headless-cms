@@ -7,6 +7,8 @@ interface DeploymentLog {
   id: string
   status: 'success' | 'failed' | 'pending'
   trigger: string
+  resourceType?: 'posts' | 'legal'
+  resourceSlug?: string
   post?: {
     id: string
     title: string
@@ -85,6 +87,12 @@ export default function DeploymentLogsView() {
         return 'Post Deleted'
       case 'manual':
         return 'Manual Trigger'
+      case 'legal-published':
+        return 'Legal Published'
+      case 'legal-updated':
+        return 'Legal Updated'
+      case 'legal-deleted':
+        return 'Legal Deleted'
       default:
         return trigger
     }
@@ -164,7 +172,7 @@ export default function DeploymentLogsView() {
               <tr style={{ background: '#f5f5f5', borderBottom: '2px solid #ddd' }}>
                 <th style={{ padding: '1rem', textAlign: 'left' }}>Status</th>
                 <th style={{ padding: '1rem', textAlign: 'left' }}>Trigger</th>
-                <th style={{ padding: '1rem', textAlign: 'left' }}>Post</th>
+                <th style={{ padding: '1rem', textAlign: 'left' }}>Resource</th>
                 <th style={{ padding: '1rem', textAlign: 'left' }}>Build ID</th>
                 <th style={{ padding: '1rem', textAlign: 'left' }}>Date</th>
                 <th style={{ padding: '1rem', textAlign: 'left' }}>Details</th>
@@ -184,7 +192,11 @@ export default function DeploymentLogsView() {
                   </td>
                   <td style={{ padding: '1rem' }}>{getTriggerLabel(log.trigger)}</td>
                   <td style={{ padding: '1rem' }}>
-                    {log.post ? (
+                    {log.resourceSlug ? (
+                      <span>
+                        {(log.resourceType === 'legal' ? 'Legal' : 'Post')}: {log.resourceSlug}
+                      </span>
+                    ) : log.post ? (
                       <a
                         href={`/admin/collections/posts/${log.post.id}`}
                         style={{ color: '#0066cc', textDecoration: 'none' }}
@@ -254,7 +266,7 @@ export default function DeploymentLogsView() {
       >
         <h3 style={{ margin: '0 0 0.5rem 0', fontSize: '1.1rem' }}>About Deployments</h3>
         <ul style={{ margin: 0, paddingLeft: '1.5rem', color: '#333' }}>
-          <li>Deployments are triggered automatically when you publish, update, or delete posts</li>
+          <li>Deployments are triggered automatically when you publish, update, or delete posts and legal pages</li>
           <li>Each deployment rebuilds your entire website (true SSG)</li>
           <li>Builds typically complete in 2-5 minutes</li>
           <li>You can view build status in your Cloudflare Pages dashboard</li>

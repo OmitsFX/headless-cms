@@ -235,13 +235,28 @@ export interface DeploymentLog {
   /**
    * What triggered the deployment
    */
-  trigger: 'post-published' | 'post-updated' | 'post-deleted' | 'manual';
+  trigger:
+    | 'post-published'
+    | 'post-updated'
+    | 'post-deleted'
+    | 'legal-published'
+    | 'legal-updated'
+    | 'legal-deleted'
+    | 'manual';
   /**
-   * Post that triggered the deployment
+   * Collection that triggered the deployment
+   */
+  resourceType?: ('posts' | 'legal') | null;
+  /**
+   * Slug of the resource that triggered the deployment
+   */
+  resourceSlug?: string | null;
+  /**
+   * Post resource that triggered the deployment (posts only)
    */
   post?: (number | null) | Post;
   /**
-   * Post slug (for deleted posts)
+   * Legacy post slug field for older records
    */
   postSlug?: string | null;
   /**
@@ -308,7 +323,7 @@ export interface Legal {
     [k: string]: unknown;
   };
   /**
-   * Date this policy was last updated (auto-set on save)
+   * Date this policy was last updated (set manually)
    */
   lastUpdated: string;
   /**
@@ -476,6 +491,8 @@ export interface PostsSelect<T extends boolean = true> {
 export interface DeploymentLogsSelect<T extends boolean = true> {
   status?: T;
   trigger?: T;
+  resourceType?: T;
+  resourceSlug?: T;
   post?: T;
   postSlug?: T;
   buildId?: T;

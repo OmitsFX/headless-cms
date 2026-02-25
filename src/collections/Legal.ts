@@ -98,21 +98,12 @@ export const Legal: CollectionConfig = {
 			name: 'lastUpdated',
 			type: 'date',
 			required: true,
-			defaultValue: new Date().toISOString(),
 			admin: {
 				position: 'sidebar',
 				date: {
 					pickerAppearance: 'dayOnly',
 				},
-				description: 'Date this policy was last updated (auto-set on save)',
-			},
-			hooks: {
-				beforeChange: [
-					() => {
-						// Always set to current date on save
-						return new Date().toISOString()
-					},
-				],
+				description: 'Date this policy was last updated (set manually)',
 			},
 		},
 		{

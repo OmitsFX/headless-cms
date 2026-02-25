@@ -6,7 +6,7 @@ export const DeploymentLogs: CollectionConfig = {
   slug: 'deployment-logs',
   admin: {
     useAsTitle: 'id',
-    defaultColumns: ['createdAt', 'status', 'trigger', 'post'],
+    defaultColumns: ['createdAt', 'status', 'trigger', 'resourceType', 'resourceSlug'],
     description: 'Track all website rebuild deployments',
     group: 'Admin',
   },
@@ -46,6 +46,9 @@ export const DeploymentLogs: CollectionConfig = {
         { label: 'Post Published', value: 'post-published' },
         { label: 'Post Updated', value: 'post-updated' },
         { label: 'Post Deleted', value: 'post-deleted' },
+        { label: 'Legal Published', value: 'legal-published' },
+        { label: 'Legal Updated', value: 'legal-updated' },
+        { label: 'Legal Deleted', value: 'legal-deleted' },
         { label: 'Manual Trigger', value: 'manual' },
       ],
       admin: {
@@ -53,18 +56,38 @@ export const DeploymentLogs: CollectionConfig = {
       },
     },
     {
+      name: 'resourceType',
+      type: 'select',
+      options: [
+        { label: 'Post', value: 'posts' },
+        { label: 'Legal', value: 'legal' },
+      ],
+      admin: {
+        description: 'Collection that triggered the deployment',
+      },
+    },
+    {
+      name: 'resourceSlug',
+      type: 'text',
+      admin: {
+        description: 'Slug of the resource that triggered the deployment',
+      },
+    },
+    {
       name: 'post',
       type: 'relationship',
       relationTo: 'posts',
+      label: 'Post Resource',
       admin: {
-        description: 'Post that triggered the deployment',
+        description: 'Post resource that triggered the deployment (posts only)',
       },
     },
     {
       name: 'postSlug',
       type: 'text',
+      label: 'Post Slug (legacy)',
       admin: {
-        description: 'Post slug (for deleted posts)',
+        description: 'Legacy post slug field for older records',
       },
     },
     {

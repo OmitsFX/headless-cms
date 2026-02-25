@@ -18,8 +18,26 @@ interface CloudflareDeployResponse {
 }
 
 // Match the exact types from DeploymentLogs collection
-type DeploymentTrigger = 'post-published' | 'post-updated' | 'post-deleted' | 'manual'
+type DeploymentTrigger =
+  | 'post-published'
+  | 'post-updated'
+  | 'post-deleted'
+  | 'legal-published'
+  | 'legal-updated'
+  | 'legal-deleted'
+  | 'manual'
 type DeploymentStatus = 'success' | 'failed' | 'pending'
+
+const getDeploymentTrigger = ({
+  collectionSlug,
+  operationType,
+}: {
+  collectionSlug: string
+  operationType: 'published' | 'updated' | 'deleted'
+}): DeploymentTrigger | 'legal-published' | 'legal-updated' | 'legal-deleted' => {
+  const prefix = collectionSlug === 'legal' ? 'legal' : 'post'
+  return `${prefix}-${operationType}` as DeploymentTrigger
+}
 
 /**
  * Trigger full static site rebuild via Cloudflare Pages deploy hook
@@ -90,15 +108,15 @@ export const triggerRebuild: CollectionAfterChangeHook = async ({
   // Determine trigger type
   let trigger: DeploymentTrigger
   if (!previousDoc) {
-    trigger = 'post-published'
+    trigger = getDeploymentTrigger({ collectionSlug: collection.slug, operationType: 'published' })
   } else if ((previousDoc as any)._status !== 'published' && (doc as any)._status === 'published') {
-    trigger = 'post-published'
+    trigger = getDeploymentTrigger({ collectionSlug: collection.slug, operationType: 'published' })
   } else if ((previousDoc as any)._status === 'published' && (doc as any)._status !== 'published') {
-    trigger = 'post-updated' // Unpublishing
+    trigger = getDeploymentTrigger({ collectionSlug: collection.slug, operationType: 'updated' }) // Unpublishing
   } else if ((previousDoc as any)._status === 'published' && (doc as any)._status === 'published') {
-    trigger = 'post-updated'
+    trigger = getDeploymentTrigger({ collectionSlug: collection.slug, operationType: 'updated' })
   } else {
-    trigger = 'post-updated'
+    trigger = getDeploymentTrigger({ collectionSlug: collection.slug, operationType: 'updated' })
   }
 
   const deployHook = process.env.CLOUDFLARE_DEPLOY_HOOK
@@ -113,7 +131,9 @@ export const triggerRebuild: CollectionAfterChangeHook = async ({
         data: {
           status: 'failed' as DeploymentStatus,
           trigger,
-          post: doc.id,
+          resourceType: collection.slug,
+          resourceSlug: (doc as any).slug as string,
+          ...(collection.slug === 'posts' ? { post: doc.id } : {}),
           postSlug: (doc as any).slug as string,
           errorMessage: 'CLOUDFLARE_DEPLOY_HOOK environment variable not set',
         },
@@ -176,7 +196,9 @@ export const triggerRebuild: CollectionAfterChangeHook = async ({
           data: {
             status: 'success' as DeploymentStatus,
             trigger,
-            post: doc.id,
+            resourceType: collection.slug,
+            resourceSlug: (doc as any).slug as string,
+            ...(collection.slug === 'posts' ? { post: doc.id } : {}),
             postSlug: (doc as any).slug as string,
             buildId,
             responseStatus,
@@ -206,7 +228,9 @@ export const triggerRebuild: CollectionAfterChangeHook = async ({
           data: {
             status: 'failed' as DeploymentStatus,
             trigger,
-            post: doc.id,
+            resourceType: collection.slug,
+            resourceSlug: (doc as any).slug as string,
+            ...(collection.slug === 'posts' ? { post: doc.id } : {}),
             postSlug: (doc as any).slug as string,
             responseStatus,
             errorMessage: `HTTP ${responseStatus}: ${response.statusText}\n${errorText}`,
@@ -233,7 +257,9 @@ export const triggerRebuild: CollectionAfterChangeHook = async ({
         data: {
           status: 'failed' as DeploymentStatus,
           trigger,
-          post: doc.id,
+          resourceType: collection.slug,
+          resourceSlug: (doc as any).slug as string,
+          ...(collection.slug === 'posts' ? { post: doc.id } : {}),
           postSlug: (doc as any).slug as string,
           errorMessage: `Exception: ${errorMessage}`,
         },
@@ -309,7 +335,12 @@ export const triggerRebuildOnDelete: CollectionAfterDeleteHook = async ({
         collection: 'deployment-logs',
         data: {
           status: 'failed' as DeploymentStatus,
-          trigger: 'post-deleted' as DeploymentTrigger,
+          trigger: getDeploymentTrigger({
+            collectionSlug: collection.slug,
+            operationType: 'deleted',
+          }),
+          resourceType: collection.slug,
+          resourceSlug: (doc as any).slug as string,
           postSlug: (doc as any).slug as string,
           errorMessage: 'CLOUDFLARE_DEPLOY_HOOK environment variable not set',
         },
@@ -357,7 +388,12 @@ export const triggerRebuildOnDelete: CollectionAfterDeleteHook = async ({
           collection: 'deployment-logs',
           data: {
             status: 'success' as DeploymentStatus,
-            trigger: 'post-deleted' as DeploymentTrigger,
+            trigger: getDeploymentTrigger({
+              collectionSlug: collection.slug,
+              operationType: 'deleted',
+            }),
+            resourceType: collection.slug,
+            resourceSlug: (doc as any).slug as string,
             postSlug: (doc as any).slug as string,
             buildId,
             responseStatus,
@@ -382,7 +418,12 @@ export const triggerRebuildOnDelete: CollectionAfterDeleteHook = async ({
           collection: 'deployment-logs',
           data: {
             status: 'failed' as DeploymentStatus,
-            trigger: 'post-deleted' as DeploymentTrigger,
+            trigger: getDeploymentTrigger({
+              collectionSlug: collection.slug,
+              operationType: 'deleted',
+            }),
+            resourceType: collection.slug,
+            resourceSlug: (doc as any).slug as string,
             postSlug: (doc as any).slug as string,
             responseStatus,
             errorMessage: `HTTP ${responseStatus}: ${response.statusText}\n${errorText}`,
@@ -406,7 +447,12 @@ export const triggerRebuildOnDelete: CollectionAfterDeleteHook = async ({
         collection: 'deployment-logs',
         data: {
           status: 'failed' as DeploymentStatus,
-          trigger: 'post-deleted' as DeploymentTrigger,
+          trigger: getDeploymentTrigger({
+            collectionSlug: collection.slug,
+            operationType: 'deleted',
+          }),
+          resourceType: collection.slug,
+          resourceSlug: (doc as any).slug as string,
           postSlug: (doc as any).slug as string,
           errorMessage: `Exception: ${errorMessage}`,
         },
